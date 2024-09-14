@@ -2,6 +2,7 @@ import os
 import json
 import dotenv
 import psycopg2
+from pprint import pprint
 from flask_cors import CORS
 from pgvector.psycopg2 import register_vector
 from flask import Flask, Response, request, jsonify
@@ -42,6 +43,10 @@ def pose():
             (embedding,),
         )
         result = cur.fetchone()
+
+        for i in range(len(result[1])):
+            result[1][i]["word"] = result[0]
+
         animations += result[1]
 
     return Response(json.dumps(animations), status=200)
