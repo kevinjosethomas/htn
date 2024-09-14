@@ -1,131 +1,112 @@
+import axios from "axios";
+import { useEffect, useRef } from "react";
 import {
-  Holistic,
-  FACEMESH_TESSELATION,
-  POSE_CONNECTIONS,
   HAND_CONNECTIONS,
+  POSE_CONNECTIONS,
+  FACEMESH_TESSELATION,
 } from "@mediapipe/holistic";
-import { Camera } from "@mediapipe/camera_utils";
-import React, { useRef, useEffect } from "react";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 
 export default function App() {
-  const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    const videoElement = videoRef.current;
-    const canvasElement = canvasRef.current;
-    const canvasCtx = canvasElement.getContext("2d");
+    const fetchData = async () => {
+      const response = await axios.post("http://127.0.0.1:5000/pose", {
+        words: "hello test",
+      });
 
-    const holistic = new Holistic({
-      locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`;
-      },
-    });
-    holistic.setOptions({
-      modelComplexity: 1,
-      smoothLandmarks: true,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5,
-    });
+      const landmarks = response.data;
 
-    const onResults = (results) => {
-      console.log(results);
-      canvasCtx.save();
-      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-      canvasCtx.drawImage(
-        results.image,
-        0,
-        0,
-        canvasElement.width,
-        canvasElement.height
-      );
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
 
-      if (results.multiFaceLandmarks) {
-        for (const landmarks of results.multiFaceLandmarks) {
-          drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION, {
-            color: "#C0C0C070",
-            lineWidth: 1,
-          });
-          drawLandmarks(canvasCtx, landmarks, {
-            color: "#FF3030",
-            lineWidth: 2,
-          });
-        }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < landmarks.length; i++) {
+        setTimeout(() => {
+          const landmark = landmarks[i];
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          if (landmark.pose_landmarks) {
+            landmark.pose_landmarks.forEach((point) => {
+              point.visibility = 1;
+            });
+
+            drawConnectors(ctx, landmark.pose_landmarks, POSE_CONNECTIONS, {
+              color: "#00FF00",
+              lineWidth: 1,
+            });
+            drawLandmarks(ctx, landmark.pose_landmarks, {
+              color: "#00FF00",
+              lineWidth: 1,
+            });
+          }
+
+          if (landmark.face_landmarks) {
+            landmark.face_landmarks.forEach((point) => {
+              point.visibility = 1;
+            });
+
+            drawConnectors(ctx, landmark.face_landmarks, FACEMESH_TESSELATION, {
+              color: "#00FF00",
+              lineWidth: 1,
+            });
+            drawLandmarks(ctx, landmark.face_landmarks, {
+              color: "#00FF00",
+              lineWidth: 1,
+            });
+          }
+
+          if (landmark.right_hand_landmarks) {
+            landmark.right_hand_landmarks.forEach((point) => {
+              point.visibility = 1;
+            });
+
+            drawConnectors(
+              ctx,
+              landmark.right_hand_landmarks,
+              HAND_CONNECTIONS,
+              {
+                color: "#00FF00",
+                lineWidth: 1,
+              }
+            );
+            drawLandmarks(ctx, landmark.right_hand_landmarks, {
+              color: "#00FF00",
+              lineWidth: 1,
+            });
+          }
+
+          if (landmark.left_hand_landmarks) {
+            landmark.left_hand_landmarks.forEach((point) => {
+              point.visibility = 1;
+            });
+
+            drawConnectors(
+              ctx,
+              landmark.left_hand_landmarks,
+              HAND_CONNECTIONS,
+              {
+                color: "#00FF00",
+                lineWidth: 1,
+              }
+            );
+            drawLandmarks(ctx, landmark.left_hand_landmarks, {
+              color: "#00FF00",
+              lineWidth: 1,
+            });
+          }
+        }, i * 33);
       }
-
-      if (results.multiHandLandmarks) {
-        for (const landmarks of results.multiHandLandmarks) {
-          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-            color: "#00FF00",
-            lineWidth: 5,
-          });
-          drawLandmarks(canvasCtx, landmarks, {
-            color: "#FF0000",
-            lineWidth: 2,
-          });
-        }
-      }
-
-      if (results.poseLandmarks) {
-        drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
-          color: "#00FF00",
-          lineWidth: 2,
-        });
-        drawLandmarks(canvasCtx, results.poseLandmarks, {
-          color: "#FF0000",
-          lineWidth: 2,
-        });
-
-        drawConnectors(canvasCtx, results.faceLandmarks, FACEMESH_TESSELATION, {
-          color: "#C0C0C070",
-          lineWidth: 2,
-        });
-        drawLandmarks(canvasCtx, results.faceLandmarks, {
-          color: "#FF3030",
-          lineWidth: 2,
-        });
-
-        drawConnectors(canvasCtx, results.leftHandLandmarks, HAND_CONNECTIONS, {
-          color: "#CC0000",
-          lineWidth: 5,
-        });
-        drawLandmarks(canvasCtx, results.leftHandLandmarks, {
-          color: "#00FF00",
-          lineWidth: 2,
-        });
-        drawConnectors(
-          canvasCtx,
-          results.rightHandLandmarks,
-          HAND_CONNECTIONS,
-          { color: "#00CC00", lineWidth: 5 }
-        );
-        drawLandmarks(canvasCtx, results.rightHandLandmarks, {
-          color: "#FF0000",
-          lineWidth: 2,
-        });
-        canvasCtx.restore();
-      }
-
-      canvasCtx.restore();
     };
 
-    holistic.onResults(onResults);
-
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        await holistic.send({ image: videoElement });
-      },
-      width: 1280,
-      height: 720,
-    });
-    camera.start();
+    fetchData();
   }, []);
 
   return (
     <div>
-      <video ref={videoRef} style={{ display: "none" }}></video>
-      <canvas ref={canvasRef} width="1280" height="720"></canvas>
+      <canvas ref={canvasRef} width="640" height="480"></canvas>
     </div>
   );
 }
