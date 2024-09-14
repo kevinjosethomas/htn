@@ -3,11 +3,11 @@
   "name": "Sign",
   "description": "Sign",
   "version": "1.0",
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "scripting"],
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/watch*"],
-      "js": ["content.js"],
+      "matches": ["*://*.youtube.com/watch*"],
+      "js": ["utils.js", "content.js"],
       "css": ["styles.css"]
     }
   ],
