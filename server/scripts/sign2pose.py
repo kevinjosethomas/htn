@@ -59,11 +59,17 @@ def interpolate_landmarks(start_landmarks, end_landmarks, ratio):
 
 
 try:
+    cur.execute("SELECT word FROM signs")
+    words = cur.fetchall()
+
     for i, file in enumerate(videos):
         try:
             bar.update(1)
             video = os.path.join("../data/videos/", file)
             word = file.split(".")[0]
+
+            if (word,) in words:
+                continue
 
             data = []
             capture = cv2.VideoCapture(video)
