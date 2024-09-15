@@ -2,6 +2,9 @@
 
 ## Data Parsing
 
+### 7:10pm (100% – 9424/9424 signs, expected 0 minutes remaining)
+<img width="300" alt="image" src="https://github.com/user-attachments/assets/58b04403-32e4-4fe0-8414-76afb13d412b">
+
 ### 6:09pm (92% complete – 8628/9424 signs, expected 40 minutes remaining)
 <img width="300" alt="image" src="https://github.com/user-attachments/assets/a9f05979-d6a5-4824-9cfa-c9ebbf60dee3">
 
@@ -15,6 +18,9 @@
 <img width="300" alt="image" src="https://github.com/user-attachments/assets/e3d30ee0-92cb-481e-bb30-41f3ce369c40">
 
 ## GPT Finetuning
+
+### 7:29pm (complete)
+<img width="300" alt="image" src="https://github.com/user-attachments/assets/3042f73e-a5d8-42c9-b154-e6e51c2386ca">
 
 ### 6:11pm (8 hours so far, still validating files)
 <img width="300" alt="image" src="https://github.com/user-attachments/assets/25a9f7af-78a6-4141-93a6-b29beaaa663c">
