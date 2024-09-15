@@ -1,5 +1,8 @@
 import os
+import re
 import json
+from openai import OpenAI
+
 import dotenv
 import psycopg2
 from flask_cors import CORS
@@ -20,6 +23,7 @@ db = psycopg2.connect(
 )
 register_vector(db)
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 fingerspelling = {}
@@ -38,7 +42,26 @@ def pose():
     if not words:
         return Response(status=400)
 
+    if words != "hello":
+        response = client.chat.completions.create(
+            model="ft:gpt-4o-mini-2024-07-18:personal:text2gloss-full-data:A7WORNDv",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Translate English to ASL Gloss Grammar",
+                },
+                {
+                    "role": "user",
+                    "content": words,
+                },
+            ],
+        )
+
+        words = response.choices[0].message.content
+        words = re.sub(r"DESC-|X-|-LRB-|-RRB-", "", words)
+
     words = words.split()
+
     cur = db.cursor()
     for word in words:
         embedding = embedding_model.encode(word)
@@ -51,7 +74,7 @@ def pose():
         if (1 - result[2]) < 0.70:
             animation = []
             for letter in word.upper():
-                animation.extend(fingerspelling.get(letter, []))
+                animation += fingerspelling.get(letter, [])
 
             for i in range(len(animation)):
                 animation[i]["word"] = f"fs-{word.upper()}"
