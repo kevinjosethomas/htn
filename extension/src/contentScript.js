@@ -6,6 +6,12 @@ import {
 import { YoutubeTranscript } from 'youtube-transcript';
 import { drawConnectors } from '@mediapipe/drawing_utils';
 
+let transcript;
+const queue = [];
+const BATCH_SIZE = 5;
+const FETCH_AHEAD_TIME = 10;
+let avatar, avatarContainer, currentSegment, word;
+
 function decodeHTMLEntities(str) {
   const output = str
     .replace(/&amp;/g, '&')
@@ -153,7 +159,6 @@ function playAnimation(segment) {
   const fps = frames / duration;
 
   console.log(segment.text);
-  console.log(`Duration: ${duration}, Frames: ${frames}, FPS: ${fps}`);
 
   let startTime = null;
 
@@ -184,60 +189,90 @@ function playAnimation(segment) {
   requestAnimationFrame(animate);
 }
 
-let transcript;
-const queue = [];
-const BATCH_SIZE = 5;
-const FETCH_AHEAD_TIME = 10;
-let avatar, avatarContainer, currentSegment, word;
+function initializeExtension() {
+  if (avatar || avatarContainer) {
+    avatar.remove();
+    avatarContainer.remove();
+  }
 
-fetchTranscript().then((data) => {
-  transcript = data.map((x) => ({ ...x, text: decodeHTMLEntities(x.text) }));
-  console.log(transcript);
-  queue.push(...transcript);
-  processQueue();
-});
-
-setInterval(() => {
-  if (!transcript) return;
-
-  const time = getCurrentTime();
-  const nextSegment = transcript.find(
-    (segment) =>
-      !segment.poses &&
-      !segment.loading &&
-      segment.offset < time + FETCH_AHEAD_TIME
-  );
-
-  if (nextSegment && queue.length > 0) {
+  addContainer();
+  fetchTranscript().then((data) => {
+    transcript = data.map((x) => ({
+      ...x,
+      text: decodeHTMLEntities(x.text),
+    }));
+    console.log(transcript);
+    queue.push(...transcript);
     processQueue();
-  }
-}, 500);
+  });
 
-setInterval(() => {
-  const currentTime = getCurrentTime();
+  setInterval(() => {
+    if (!transcript) return;
 
-  if (!transcript) return;
-  if (
-    currentSegment &&
-    currentSegment.offset < currentTime &&
-    currentSegment.offset + currentSegment.duration > currentTime
-  )
-    return;
+    const time = getCurrentTime();
+    const nextSegment = transcript.find(
+      (segment) =>
+        !segment.poses &&
+        !segment.loading &&
+        segment.offset < time + FETCH_AHEAD_TIME
+    );
 
-  currentSegment = transcript.find(
-    (segment) =>
-      segment.offset <= currentTime &&
-      segment.offset + segment.duration >= currentTime
-  );
+    if (nextSegment && queue.length > 0) {
+      processQueue();
+    }
+  }, 500);
 
-  if (currentSegment) {
-    playAnimation(currentSegment);
-  }
-}, [200]);
+  setInterval(() => {
+    const currentTime = getCurrentTime();
 
-setTimeout(() => {
-  const targetElement = document.getElementById('secondary-inner');
-  if (targetElement) {
-    addContainer();
-  }
-}, 1500);
+    if (!transcript) return;
+    if (
+      currentSegment &&
+      currentSegment.offset < currentTime &&
+      currentSegment.offset + currentSegment.duration > currentTime
+    )
+      return;
+
+    currentSegment = transcript.find(
+      (segment) =>
+        segment.offset <= currentTime &&
+        segment.offset + segment.duration >= currentTime
+    );
+
+    if (currentSegment) {
+      playAnimation(currentSegment);
+    }
+  }, [200]);
+
+  setTimeout(() => {
+    const targetElement = document.getElementById('secondary-inner');
+    if (targetElement) {
+      addContainer();
+    }
+  }, 1500);
+}
+
+function observeUrlChanges() {
+  let lastUrl = location.href;
+  new MutationObserver(() => {
+    const currentUrl = location.href;
+    if (currentUrl !== lastUrl) {
+      lastUrl = currentUrl;
+      location.reload();
+    }
+  }).observe(document, { subtree: true, childList: true });
+}
+
+document.addEventListener(
+  'DOMContentLoaded',
+  () => {
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      videoElement.pause();
+    }
+  },
+  [200]
+);
+
+initializeExtension();
+observeUrlChanges();

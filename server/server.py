@@ -2,17 +2,15 @@ import os
 import json
 import dotenv
 import psycopg2
-from pprint import pprint
 from flask_cors import CORS
+from flask import Flask, Response, request
 from pgvector.psycopg2 import register_vector
-from flask import Flask, Response, request, jsonify
 from sentence_transformers import SentenceTransformer
 
 
 dotenv.load_dotenv()
 app = Flask(__name__)
 CORS(app)
-
 db = psycopg2.connect(
     database="poses",
     host="localhost",
@@ -21,8 +19,14 @@ db = psycopg2.connect(
     port=5432,
 )
 register_vector(db)
-
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+
+fingerspelling = {}
+for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+    file_path = os.path.join("data/alphabets", f"{letter}.json")
+    with open(file_path, "r") as file:
+        fingerspelling[letter] = json.load(file)
 
 
 @app.route("/pose", methods=["POST"])
@@ -44,10 +48,20 @@ def pose():
         )
         result = cur.fetchone()
 
-        for i in range(len(result[1])):
-            result[1][i]["word"] = result[0]
+        if (1 - result[2]) < 0.70:
+            animation = []
+            for letter in word.upper():
+                animation.extend(fingerspelling.get(letter, []))
 
-        animations += result[1]
+            for i in range(len(animation)):
+                animation[i]["word"] = f"fs-{word.upper()}"
+
+            animations += animation
+        else:
+            for i in range(len(result[1])):
+                result[1][i]["word"] = result[0]
+
+            animations += result[1]
 
     return Response(json.dumps(animations), status=200)
 

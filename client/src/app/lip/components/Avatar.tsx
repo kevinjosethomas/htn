@@ -124,7 +124,7 @@ export default function Avatar({ poses }: { poses: any[] }) {
 
 function Word({ word }: { word: string }) {
   return (
-    <div className="text-[#00FF00] absolute bottom-0 text-2xl font-medium left-1/2 transform -translate-x-1/2">
+    <div className="text-[#FF0000] absolute bottom-4 text-2xl font-medium left-1/2 transform -translate-x-1/2">
       <p>{word}</p>
     </div>
   );
