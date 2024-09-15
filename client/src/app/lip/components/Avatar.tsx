@@ -8,6 +8,7 @@ import { drawConnectors } from "@mediapipe/drawing_utils";
 
 import { type Point } from "@/app/types";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function Avatar({ poses }: { poses: any[] }) {
   const canvasRef = useRef(null);
   const [word, setWord] = useState<string>("");
@@ -34,11 +35,22 @@ export default function Avatar({ poses }: { poses: any[] }) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (landmark.pose_landmarks) {
-          landmark.pose_landmarks.forEach((point: Point) => {
+          const filteredPoseLandmarks = landmark.pose_landmarks.filter(
+            (point: Point, index: number) =>
+              ![17, 18, 19, 20, 21, 22].includes(index)
+          );
+
+          const filteredPoseConnections = POSE_CONNECTIONS.filter(
+            ([start, end]) =>
+              ![17, 18, 19, 20, 21, 22].includes(start) &&
+              ![17, 18, 19, 20, 21, 22].includes(end)
+          );
+
+          filteredPoseLandmarks.forEach((point: Point) => {
             point.visibility = 1;
           });
 
-          drawConnectors(ctx, landmark.pose_landmarks, POSE_CONNECTIONS, {
+          drawConnectors(ctx, filteredPoseLandmarks, filteredPoseConnections, {
             color: "#00FF00",
             lineWidth: 2,
           });
