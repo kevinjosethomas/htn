@@ -33,6 +33,31 @@ for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
         fingerspelling[letter] = json.load(file)
 
 
+def interpolate_landmarks(start_landmark, end_landmark, ratio):
+
+    interpolated_landmarks = []
+
+    if start_landmark is None or end_landmark is None:
+        return None
+
+    for i in range(len(start_landmark)):
+        if start_landmark[i] is None or end_landmark[i] is None:
+            interpolated_landmarks.append(None)
+        else:
+            interpolated_landmark = {
+                "x": start_landmark[i]["x"]
+                + (end_landmark[i]["x"] - start_landmark[i]["x"]) * ratio,
+                "y": start_landmark[i]["y"]
+                + (end_landmark[i]["y"] - start_landmark[i]["y"]) * ratio,
+                "z": start_landmark[i]["z"]
+                + (end_landmark[i]["z"] - start_landmark[i]["z"]) * ratio,
+                "visibility": start_landmark[i]["visibility"],
+            }
+            interpolated_landmarks.append(interpolated_landmark)
+
+    return interpolated_landmarks
+
+
 @app.route("/pose", methods=["POST"])
 def pose():
     data = request.get_json()
@@ -84,7 +109,42 @@ def pose():
             for i in range(len(result[1])):
                 result[1][i]["word"] = result[0]
 
-            animations += result[1]
+            animation = result[1]
+
+        previous_frame = animations[-1] if animations else None
+        next_frame = animation[0]
+
+        if previous_frame and next_frame:
+            for i in range(5):
+                ratio = i / 5
+
+                interpolated_frame = {
+                    "frame": previous_frame["frame"] + i,
+                    "pose_landmarks": interpolate_landmarks(
+                        previous_frame["pose_landmarks"],
+                        next_frame["pose_landmarks"],
+                        ratio,
+                    ),
+                    "left_hand_landmarks": interpolate_landmarks(
+                        previous_frame["left_hand_landmarks"],
+                        next_frame["left_hand_landmarks"],
+                        ratio,
+                    ),
+                    "right_hand_landmarks": interpolate_landmarks(
+                        previous_frame["right_hand_landmarks"],
+                        next_frame["right_hand_landmarks"],
+                        ratio,
+                    ),
+                    "face_landmarks": interpolate_landmarks(
+                        previous_frame["face_landmarks"],
+                        next_frame["face_landmarks"],
+                        ratio,
+                    ),
+                }
+
+                animations.append(interpolated_frame)
+
+        animations += animation
 
     return Response(json.dumps(animations), status=200)
 
