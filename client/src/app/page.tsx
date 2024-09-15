@@ -55,7 +55,7 @@ export default function App() {
         </a>
         <a
           target="_blank"
-          href="https://www.youtube.com/watch?v=1tX5aea0La4"
+          href="https://www.youtube.com/watch?v=xFFs9UgOAlE"
           className="flex h-full w-full flex-col gap-4 rounded-md border border-white border-opacity-10 p-10 transition duration-500 hover:border-opacity-20 hover:bg-white hover:bg-opacity-[0.01]"
         >
           <div className="flex items-center gap-4">

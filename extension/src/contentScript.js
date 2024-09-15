@@ -8,7 +8,7 @@ import { drawConnectors } from '@mediapipe/drawing_utils';
 
 let transcript;
 const queue = [];
-const BATCH_SIZE = 5;
+const BATCH_SIZE = 2;
 const FETCH_AHEAD_TIME = 10;
 let avatar, avatarContainer, currentSegment, word;
 
@@ -24,13 +24,10 @@ function decodeHTMLEntities(str) {
 }
 
 function fetchTranscript() {
-  /* Fetch the transcript of the video */
   return YoutubeTranscript.fetchTranscript(window.location.href);
 }
 
 function addContainer() {
-  /* Add a container to the sidebar for the avatar */
-
   avatarContainer = document.createElement('div');
   avatarContainer.id = 'avatar-container';
   avatar = document.createElement('canvas');
@@ -47,7 +44,6 @@ function addContainer() {
 }
 
 function getCurrentTime() {
-  /* Get current time of the video player */
   const player = document.querySelector('video');
   if (player) {
     return player.currentTime;
@@ -61,7 +57,17 @@ function drawLandmarks(landmark, ctx) {
       point.visibility = 1;
     });
 
-    drawConnectors(ctx, landmark.pose_landmarks, POSE_CONNECTIONS, {
+    const filteredPoseLandmarks = landmark.pose_landmarks.filter(
+      (point, index) => ![17, 18, 19, 20, 21, 22].includes(index)
+    );
+
+    const filteredPoseConnections = POSE_CONNECTIONS.filter(
+      (connection) =>
+        ![17, 18, 19, 20, 21, 22].includes(connection[0]) &&
+        ![17, 18, 19, 20, 21, 22].includes(connection[1])
+    );
+
+    drawConnectors(ctx, filteredPoseLandmarks, filteredPoseConnections, {
       color: '#00FF00',
       lineWidth: 2,
     });
@@ -131,8 +137,6 @@ function processQueue() {
       const index = transcript.findIndex((s) => s === segment);
       transcript[index] = segment;
     });
-
-    processQueue();
   });
 }
 

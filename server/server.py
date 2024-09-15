@@ -1,14 +1,15 @@
 import os
 import re
 import json
+import gzip
 from openai import OpenAI
 
 import dotenv
 import psycopg2
 from flask_cors import CORS
-from flask import Flask, Response, request
 from pgvector.psycopg2 import register_vector
 from sentence_transformers import SentenceTransformer
+from flask import Flask, Response, request, make_response
 
 
 dotenv.load_dotenv()
@@ -60,6 +61,7 @@ def interpolate_landmarks(start_landmark, end_landmark, ratio):
 
 @app.route("/pose", methods=["POST"])
 def pose():
+
     data = request.get_json()
     words = data.get("words", "").lower().strip()
     animations = []
@@ -69,11 +71,11 @@ def pose():
 
     if words != "hello":
         response = client.chat.completions.create(
-            model="ft:gpt-4o-mini-2024-07-18:personal:text2gloss-full-data:A7WORNDv",
+            model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
-                    "content": "Translate English to ASL Gloss Grammar",
+                    "content": "You are meant to convert text from English to ASL Gloss grammar. Do not change meaning or move periods. I will send you a phrase, please rephrase it it to follow ASL grammar order: object, then subject, then verb. Remove words like IS and ARE that are not present in ASL. Replace I with ME. Do not add classifiers. Everything should be English text. Please output nothing but the rephrased phrase.",
                 },
                 {
                     "role": "user",
@@ -83,8 +85,10 @@ def pose():
         )
 
         words = response.choices[0].message.content
-        words = re.sub(r"DESC-|X-|-LRB-|-RRB-", "", words)
 
+    words = re.sub(r"\buh\b", "", words)
+
+    print(words)
     words = words.split()
 
     cur = db.cursor()
@@ -103,23 +107,22 @@ def pose():
 
             for i in range(len(animation)):
                 animation[i]["word"] = f"fs-{word.upper()}"
-
-            animations += animation
         else:
-            for i in range(len(result[1])):
-                result[1][i]["word"] = result[0]
-
             animation = result[1]
+            for i in range(len(animation)):
+                animation[i]["word"] = result[0]
 
-        previous_frame = animations[-1] if animations else None
-        next_frame = animation[0]
+        previous_frame = None if not animations else animations[-1]
 
-        if previous_frame and next_frame:
+        if previous_frame and animation:
+            next_frame = animation[0]
+
             for i in range(5):
                 ratio = i / 5
 
                 interpolated_frame = {
                     "frame": previous_frame["frame"] + i,
+                    "word": previous_frame["word"],
                     "pose_landmarks": interpolate_landmarks(
                         previous_frame["pose_landmarks"],
                         next_frame["pose_landmarks"],
@@ -146,7 +149,12 @@ def pose():
 
         animations += animation
 
-    return Response(json.dumps(animations), status=200)
+    content = gzip.compress(json.dumps(animations).encode("utf8"), 5)
+    response = make_response(content)
+    response.headers["Content-length"] = len(content)
+    response.headers["Content-Encoding"] = "gzip"
+
+    return response
 
 
 if __name__ == "__main__":
