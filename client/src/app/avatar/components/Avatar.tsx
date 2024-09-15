@@ -3,6 +3,7 @@ import {
   POSE_CONNECTIONS,
   FACEMESH_TESSELATION,
 } from "@mediapipe/holistic";
+import * as Kalidokit from "kalidokit";
 import { useEffect, useState, useRef } from "react";
 import { drawConnectors } from "@mediapipe/drawing_utils";
 
@@ -35,74 +36,27 @@ export default function Avatar({ poses }: { poses: any[] }) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (landmark.pose_landmarks) {
-          const filteredPoseLandmarks = landmark.pose_landmarks.filter(
-            (point: Point, index: number) =>
-              ![17, 18, 19, 20, 21, 22].includes(index)
-          );
-
-          const filteredPoseConnections = POSE_CONNECTIONS.filter(
-            ([start, end]) =>
-              ![17, 18, 19, 20, 21, 22].includes(start) &&
-              ![17, 18, 19, 20, 21, 22].includes(end)
-          );
-
-          filteredPoseLandmarks.forEach((point: Point) => {
+          landmark.pose_landmarks.forEach((point: Point) => {
             point.visibility = 1;
           });
-
-          drawConnectors(ctx, filteredPoseLandmarks, filteredPoseConnections, {
-            color: "#00FF00",
-            lineWidth: 2,
-          });
-          // drawLandmarks(ctx, landmark.pose_landmarks, {
-          //   color: "#00FF00",
-          //   lineWidth: 1,
-          // });
         }
 
         if (landmark.face_landmarks) {
           landmark.face_landmarks.forEach((point: Point) => {
             point.visibility = 1;
           });
-
-          drawConnectors(ctx, landmark.face_landmarks, FACEMESH_TESSELATION, {
-            color: "#00FF00",
-            lineWidth: 0.5,
-          });
-          // drawLandmarks(ctx, landmark.face_landmarks, {
-          //   color: "#00FF00",
-          //   lineWidth: 1,
-          // });
         }
 
         if (landmark.right_hand_landmarks) {
           landmark.right_hand_landmarks.forEach((point: Point) => {
             point.visibility = 1;
           });
-
-          drawConnectors(ctx, landmark.right_hand_landmarks, HAND_CONNECTIONS, {
-            color: "#00FF00",
-            lineWidth: 2,
-          });
-          // drawLandmarks(ctx, landmark.right_hand_landmarks, {
-          //   color: "#00FF00",
-          //   lineWidth: 1,
-          // });
         }
 
         if (landmark.left_hand_landmarks) {
           landmark.left_hand_landmarks.forEach((point: Point) => {
             point.visibility = 1;
           });
-
-          drawConnectors(ctx, landmark.left_hand_landmarks, HAND_CONNECTIONS, {
-            color: "#00FF00",
-            lineWidth: 2,
-          });
-          // drawLandmarks(ctx, landmark.left_hand_landmarks, {
-          //   color: "#00FF00",
-          //   lineWidth: 1,
-          // });
         }
       }, i * 33);
     }

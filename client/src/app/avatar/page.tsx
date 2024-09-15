@@ -4,11 +4,12 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 
 import Avatar from "./components/Avatar";
-import LipReader from "./components/LipReader";
+import LipReader from "@/components/LipReader";
 
 export default function LipPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [poses, setPoses] = useState<any[]>([]);
 
   useEffect(() => {
