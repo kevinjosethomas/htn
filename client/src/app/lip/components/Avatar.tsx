@@ -12,7 +12,6 @@ export default function Avatar({ poses }: { poses: any[] }) {
   const canvasRef = useRef(null);
   const [word, setWord] = useState<string>("");
   const [signing, setSigning] = useState<boolean>(false);
-  const [containerHeight, setContainerHeight] = useState<number>(0);
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -124,7 +123,6 @@ export default function Avatar({ poses }: { poses: any[] }) {
 }
 
 function Word({ word }: { word: string }) {
-  console.log(word);
   return (
     <div className="text-[#00FF00] absolute bottom-0 text-2xl font-medium left-1/2 transform -translate-x-1/2">
       <p>{word}</p>
