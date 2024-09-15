@@ -188,7 +188,6 @@ function initializeExtension() {
     avatarContainer.remove();
   }
 
-  addContainer();
   fetchTranscript().then((data) => {
     transcript = data.map((x) => ({
       ...x,
