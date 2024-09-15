@@ -100,15 +100,15 @@ def pose():
         )
         result = cur.fetchone()
 
-        if (1 - result[2]) < 0.70:
-            animation = []
+        animation = []
+        if (1 - result[2]) < 0.75:
             for letter in word.upper():
-                animation += fingerspelling.get(letter, [])
-
-            for i in range(len(animation)):
-                animation[i]["word"] = f"fs-{word.upper()}"
+                fingerspell = fingerspelling.get(letter, [])
+                for i in range(len(fingerspell)):
+                    fingerspell[i]["word"] = f"fs-{word.upper()}"
+                animation += fingerspell
         else:
-            animation = result[1]
+            animation += result[1]
             for i in range(len(animation)):
                 animation[i]["word"] = result[0]
 

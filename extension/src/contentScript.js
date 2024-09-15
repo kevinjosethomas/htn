@@ -162,31 +162,20 @@ function playAnimation(segment) {
   const frames = poses.length;
   const fps = frames / duration;
 
-  console.log(segment.text);
+  let frameIndex = 0;
 
-  let startTime = null;
-
-  function animate(timestamp) {
-    if (!startTime) startTime = timestamp;
-    const elapsed = (timestamp - startTime) / 1000;
-    const currentFrame = Math.floor(elapsed * fps);
-
-    if (currentFrame >= poses.length) {
+  function animate() {
+    if (frameIndex >= poses.length) {
       return;
     }
 
-    const landmark = poses[currentFrame];
-    const currentTime = getCurrentTime();
+    const landmark = poses[frameIndex];
 
-    if (
-      currentTime >= segment.offset &&
-      currentTime <= segment.offset + duration
-    ) {
-      word.innerText = landmark.word;
-      ctx.clearRect(0, 0, avatar.width, avatar.height);
-      drawLandmarks(landmark, ctx);
-    }
+    word.innerText = landmark.word;
+    ctx.clearRect(0, 0, avatar.width, avatar.height);
+    drawLandmarks(landmark, ctx);
 
+    frameIndex++;
     requestAnimationFrame(animate);
   }
 
